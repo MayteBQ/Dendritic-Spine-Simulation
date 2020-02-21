@@ -1,0 +1,51 @@
+
+load('resting_shape_2D.mat')
+% load S matrix containing resting shape and P an structure with the
+% parameters (some change name, see paper and Simulation 3D)
+
+P.t_end =15*60;% s 
+aux_t = P.t_initial:P.delta_t:P.t_end;
+% P.rate_PSD = 0;
+% P.index_0 = P.index;P.index2_0 = P.index2;P.index3_0 = P.index3;
+%     P.index_n_0 = P.index_n;P.index_psd_0 = P.index_psd;
+
+
+% For saving data 
+aux_S = cell(length(aux_t),1);
+aux_area = zeros(length(aux_t),1);
+aux_foci = zeros(length(aux_t),1);
+aux_length_foci = [];
+filaments = [];
+aux_B = zeros(length(aux_t),1);
+
+
+% choose the initial nucleation points 
+[P.ini_fil,P.a_points,P.line] = initial_B_2D(S_0,P);
+
+% assignate a number of barbed ends
+P.K = length(S);
+B = randi(P.B_0,length(P.ini_fil),1);
+for l = 1:length(P.ini_fil)
+    filaments = [filaments;P.ini_fil(l)*ones(B(l),1) zeros(B(l),1) ones(B(l),1)];
+end
+filaments = cap_ends(filaments,P);
+
+
+
+ff_length = [P.a_points aux_t(1)*ones(size(P.ini_fil))];
+aux_foci(1,t,pp) = length(P.ini_fil);
+aux_area(1,t,pp) =area_S(S);
+aux_S{1,t,pp} = S;
+aux_fil = store_data(filaments,P);
+aux_B(1,t,pp) = sum(aux_fil);
+ 
+
+
+
+
+for pp = 1:length(param)
+    P.tau_prob = param(pp);
+    loop_sim_2D_changingPSD
+    save loop_psd0_tauprob_all.mat aux_area aux_length_foci aux_S aux_foci aux_B param P
+end
+
